@@ -18,6 +18,7 @@ const nextConfig = {
     images: {
         unoptimized: true,
     },
+    assetPrefix: "/time-break/",
     experimental: {
         webpackBuildWorker: true,
         parallelServerBuildTraces: true,
