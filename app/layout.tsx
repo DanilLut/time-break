@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans';
+import { GeistSans } from 'geist/font/sans'
 import './globals.css'
 
 export const metadata: Metadata = {
     title: 'Time Break',
-    description: ''
+    description: '',
 }
 
 export default function RootLayout({

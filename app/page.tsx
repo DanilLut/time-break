@@ -11,6 +11,20 @@ import BreakEnforcer from '@/components/BreakEnforcer'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
+import {
+    Collapsible,
+    CollapsibleTrigger,
+    CollapsibleContent,
+} from '@/components/ui/collapsible'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { ChevronDown, ChevronUp, X, Plus, Trash2 } from 'lucide-react'
+
+interface Task {
+    id: string
+    text: string
+    createdAt: number
+}
+
 // Format seconds to human-readable time
 const formatSecondsToTime = (seconds: number): string => {
     if (seconds === 0) return '0s'
@@ -72,6 +86,65 @@ const parseTimeExpression = (input: string, currentValue: number): number => {
 }
 
 export default function BreakScheduler() {
+    // Task states initialization
+    const [isMounted, setIsMounted] = useState(false)
+    const [taskInput, setTaskInput] = useState('')
+    const [tasks, setTasks] = useState<Task[]>([])
+
+    // Initialize from localStorage after mount
+    useEffect(() => {
+        setIsMounted(true)
+        setTaskInput(localStorage.getItem('breakTimerTask') || '')
+        const savedTasks = localStorage.getItem('breakTimerTasks')
+        setTasks(savedTasks ? JSON.parse(savedTasks) : [])
+    }, [])
+
+    // Persist task input
+    useEffect(() => {
+        if (isMounted) {
+            localStorage.setItem('breakTimerTask', taskInput)
+        }
+    }, [taskInput, isMounted])
+
+    // Persist task list
+    useEffect(() => {
+        if (isMounted) {
+            localStorage.setItem('breakTimerTasks', JSON.stringify(tasks))
+        }
+    }, [tasks, isMounted])
+
+    const handleAddTask = () => {
+        if (taskInput.trim()) {
+            setTasks((prev) => [
+                ...prev,
+                {
+                    id: Date.now().toString(),
+                    text: taskInput.trim(),
+                    createdAt: Date.now(),
+                },
+            ])
+            setTaskInput('')
+        }
+    }
+
+    const handleClearInput = () => {
+        setTaskInput('')
+    }
+
+    const handleTaskClick = (text: string) => {
+        setTaskInput(text)
+    }
+
+    const [isTasksOpen, setIsTasksOpen] = useState(false)
+
+    const handleDeleteTask = (taskId: string) => {
+        setTasks((prev) => prev.filter((task) => task.id !== taskId))
+    }
+
+    const handleDeleteAllTasks = () => {
+        setTasks([])
+    }
+
     const [config, setConfig] = useState(() => {
         if (typeof window === 'undefined') {
             return {
@@ -252,6 +325,10 @@ export default function BreakScheduler() {
         },
     ]
 
+    if (!isMounted) {
+        return null // or loading skeleton
+    }
+
     return (
         <ThemeProvider defaultTheme="system" storageKey="ui-theme">
             <div className="container mx-auto p-4">
@@ -259,6 +336,101 @@ export default function BreakScheduler() {
                     <h1 className="text-3xl font-bold mb-6">Break Scheduler</h1>
                     <ThemeToggle />
                 </div>
+
+                {/* Task Input Section */}
+                <div className="mb-6 space-y-2">
+                    <Label>Session Focus</Label>
+                    <div className="flex gap-2">
+                        <Input
+                            value={taskInput}
+                            onChange={(e) => setTaskInput(e.target.value)}
+                            placeholder="What should you focus on during this session?"
+                            className="flex-1"
+                            onKeyDown={(e) =>
+                                e.key === 'Enter' && handleAddTask()
+                            }
+                        />
+                        <Button variant="outline" onClick={handleClearInput}>
+                            <X className="h-4 w-4" />
+                        </Button>
+                        <Button onClick={handleAddTask}>
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </div>
+
+                    {/* Task List */}
+                    {tasks.length > 0 && (
+                        <Collapsible
+                            open={isTasksOpen}
+                            onOpenChange={setIsTasksOpen}
+                            className="mt-4 space-y-2"
+                        >
+                            <div className="flex items-center justify-between">
+                                <CollapsibleTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="w-full justify-between"
+                                    >
+                                        <span>
+                                            Saved Tasks ({tasks.length})
+                                        </span>
+                                        {isTasksOpen ? (
+                                            <ChevronUp className="h-4 w-4" />
+                                        ) : (
+                                            <ChevronDown className="h-4 w-4" />
+                                        )}
+                                    </Button>
+                                </CollapsibleTrigger>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleDeleteAllTasks}
+                                    className="text-destructive hover:text-destructive"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
+
+                            <CollapsibleContent>
+                                <ScrollArea className="h-48 rounded-md border">
+                                    <div className="p-2 space-y-1">
+                                        {tasks.map((task) => (
+                                            <div
+                                                key={task.id}
+                                                className="flex items-center justify-between p-2 hover:bg-accent rounded-sm"
+                                            >
+                                                <span
+                                                    className="cursor-pointer flex-1"
+                                                    onClick={() =>
+                                                        handleTaskClick(
+                                                            task.text
+                                                        )
+                                                    }
+                                                >
+                                                    {task.text}
+                                                </span>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-6 w-6 text-destructive hover:text-destructive"
+                                                    onClick={() =>
+                                                        handleDeleteTask(
+                                                            task.id
+                                                        )
+                                                    }
+                                                >
+                                                    <X className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    )}
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Card>
                         <CardHeader>
