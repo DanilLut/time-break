@@ -7,17 +7,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useBreakTimer } from '@/hooks/useBreakTimer'
 import BreakEnforcer from '@/components/BreakEnforcer'
-
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { ThemeToggle } from '@/components/ThemeToggle'
-
 import {
     Collapsible,
     CollapsibleTrigger,
     CollapsibleContent,
 } from '@/components/ui/collapsible'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ChevronDown, ChevronUp, X, Plus, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, X, Plus, Trash2, Cog } from 'lucide-react'
 
 interface Task {
     id: string
@@ -86,6 +91,8 @@ const parseTimeExpression = (input: string, currentValue: number): number => {
 }
 
 export default function BreakScheduler() {
+    const [isConfigOpen, setIsConfigOpen] = useState(false)
+
     // Task states initialization
     const [isMounted, setIsMounted] = useState(false)
     const [taskInput, setTaskInput] = useState('')
@@ -335,6 +342,85 @@ export default function BreakScheduler() {
                 <div className="flex gap-4 mt-8">
                     <h1 className="text-3xl font-bold mb-6">Break Scheduler</h1>
                     <ThemeToggle />
+                    <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" size="icon">
+                                <Cog className="h-4 w-4" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>Configuration</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid grid-cols-2 gap-4">
+                                {inputConfig.map(({ id, label, field }) => (
+                                    <div key={id}>
+                                        <Label htmlFor={id}>{label}</Label>
+                                        <Input
+                                            id={id}
+                                            value={
+                                                rawInputs[
+                                                    field as keyof typeof rawInputs
+                                                ]
+                                            }
+                                            onChange={handleRawInputChange(
+                                                field as keyof typeof rawInputs
+                                            )}
+                                            onKeyDown={handleKeyPress(
+                                                field as keyof typeof rawInputs
+                                            )}
+                                            onBlur={() =>
+                                                setRawInputs((prev) => ({
+                                                    ...prev,
+                                                    [field]:
+                                                        formatSecondsToTime(
+                                                            config[
+                                                                field as keyof typeof config
+                                                            ]
+                                                        ),
+                                                }))
+                                            }
+                                            placeholder="e.g., 1m 30s, 150+5s"
+                                        />
+                                        <div className="text-sm text-muted-foreground mt-1">
+                                            {
+                                                config[
+                                                    field as keyof typeof config
+                                                ]
+                                            }{' '}
+                                            seconds
+                                        </div>
+                                    </div>
+                                ))}
+                                <div>
+                                    <Label htmlFor="sessionsBeforeLongBreak">
+                                        Sessions before Long Break
+                                    </Label>
+                                    <Input
+                                        id="sessionsBeforeLongBreak"
+                                        name="sessionsBeforeLongBreak"
+                                        type="number"
+                                        min="1"
+                                        value={config.sessionsBeforeLongBreak}
+                                        onChange={handleConfigChange}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="totalCycles">
+                                        Total Cycles (0 for infinite)
+                                    </Label>
+                                    <Input
+                                        id="totalCycles"
+                                        name="totalCycles"
+                                        type="number"
+                                        min="0"
+                                        value={config.totalCycles}
+                                        onChange={handleConfigChange}
+                                    />
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
                 {/* Task Input Section */}
@@ -431,7 +517,7 @@ export default function BreakScheduler() {
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                     <Card>
                         <CardHeader>
                             <CardTitle>Timer</CardTitle>
@@ -460,81 +546,6 @@ export default function BreakScheduler() {
                                     Pause
                                 </Button>
                                 <Button onClick={reset}>Reset</Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Configuration</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-2 gap-4">
-                                {inputConfig.map(({ id, label, field }) => (
-                                    <div key={id}>
-                                        <Label htmlFor={id}>{label}</Label>
-                                        <Input
-                                            id={id}
-                                            value={
-                                                rawInputs[
-                                                    field as keyof typeof rawInputs
-                                                ]
-                                            }
-                                            onChange={handleRawInputChange(
-                                                field as keyof typeof rawInputs
-                                            )}
-                                            onKeyDown={handleKeyPress(
-                                                field as keyof typeof rawInputs
-                                            )}
-                                            onBlur={() =>
-                                                setRawInputs((prev) => ({
-                                                    ...prev,
-                                                    [field]:
-                                                        formatSecondsToTime(
-                                                            config[
-                                                                field as keyof typeof config
-                                                            ]
-                                                        ),
-                                                }))
-                                            }
-                                            placeholder="e.g., 1m 30s, 150+5s"
-                                        />
-                                        <div className="text-sm text-muted-foreground mt-1">
-                                            {' '}
-                                            {
-                                                config[
-                                                    field as keyof typeof config
-                                                ]
-                                            }{' '}
-                                            seconds
-                                        </div>
-                                    </div>
-                                ))}
-                                <div>
-                                    <Label htmlFor="sessionsBeforeLongBreak">
-                                        Sessions before Long Break
-                                    </Label>
-                                    <Input
-                                        id="sessionsBeforeLongBreak"
-                                        name="sessionsBeforeLongBreak"
-                                        type="number"
-                                        min="1"
-                                        value={config.sessionsBeforeLongBreak}
-                                        onChange={handleConfigChange}
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="totalCycles">
-                                        Total Cycles (0 for infinite)
-                                    </Label>
-                                    <Input
-                                        id="totalCycles"
-                                        name="totalCycles"
-                                        type="number"
-                                        min="0"
-                                        value={config.totalCycles}
-                                        onChange={handleConfigChange}
-                                    />
-                                </div>
                             </div>
                         </CardContent>
                     </Card>
