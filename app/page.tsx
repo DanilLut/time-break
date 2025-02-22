@@ -339,8 +339,10 @@ export default function BreakScheduler() {
     return (
         <ThemeProvider defaultTheme="system" storageKey="ui-theme">
             <div className="container mx-auto p-4">
-                <div className="flex gap-4 mt-8">
-                    <h1 className="text-3xl font-bold mb-6">Break Scheduler</h1>
+                <div className="flex gap-2 mt-8">
+                    <h1 className="text-3xl font-bold mb-6 mr-auto">
+                        Break Scheduler
+                    </h1>
                     <ThemeToggle />
                     <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
                         <DialogTrigger asChild>
@@ -424,24 +426,40 @@ export default function BreakScheduler() {
                 </div>
 
                 {/* Task Input Section */}
-                <div className="mb-6 space-y-2">
-                    <Label>Session Focus</Label>
-                    <div className="flex gap-2">
+                <div className="mb-3 space-y-2">
+                    <div className="flex items-center gap-2 my-2">
+                        <Label>Session Focus</Label>
+                        <span className="text-sm text-primary/60">
+                            • Press Enter to save
+                        </span>
+                    </div>
+                    <div className="flex gap-2 relative">
                         <Input
                             value={taskInput}
                             onChange={(e) => setTaskInput(e.target.value)}
-                            placeholder="What should you focus on during this session?"
-                            className="flex-1"
+                            placeholder="✨ What's your focus for this session?"
+                            className="flex-1 pl-4 pr-12 py-5"
                             onKeyDown={(e) =>
                                 e.key === 'Enter' && handleAddTask()
                             }
                         />
-                        <Button variant="outline" onClick={handleClearInput}>
-                            <X className="h-4 w-4" />
-                        </Button>
-                        <Button onClick={handleAddTask}>
-                            <Plus className="h-4 w-4" />
-                        </Button>
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
+                            <Button
+                                variant="ghost"
+                                onClick={handleClearInput}
+                                className="h-7 w-7 p-2 rounded-lg hover:bg-primary/10 text-primary/80 hover:text-primary"
+                                title="Clear input"
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                onClick={handleAddTask}
+                                className="h-7 w-7 p-2"
+                                title="Add task"
+                            >
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Task List */}
@@ -451,20 +469,24 @@ export default function BreakScheduler() {
                             onOpenChange={setIsTasksOpen}
                             className="mt-4 space-y-2"
                         >
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between rounded-lg p-1">
                                 <CollapsibleTrigger asChild>
                                     <Button
                                         variant="ghost"
-                                        size="sm"
-                                        className="w-full justify-between"
+                                        className="w-full justify-between px-4 py-2 hover:bg-muted/30 rounded-lg transition-colors"
                                     >
-                                        <span>
-                                            Saved Tasks ({tasks.length})
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium text-primary/90">
+                                                Saved Tasks
+                                            </span>
+                                            <span className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-sm">
+                                                {tasks.length}
+                                            </span>
+                                        </div>
                                         {isTasksOpen ? (
-                                            <ChevronUp className="h-4 w-4" />
+                                            <ChevronUp className="h-5 w-5 text-primary/80" />
                                         ) : (
-                                            <ChevronDown className="h-4 w-4" />
+                                            <ChevronDown className="h-5 w-5 text-primary/80" />
                                         )}
                                     </Button>
                                 </CollapsibleTrigger>
@@ -472,22 +494,23 @@ export default function BreakScheduler() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={handleDeleteAllTasks}
-                                    className="text-destructive hover:text-destructive"
+                                    className="text-red-600 hover:text-red-700 p-2 mx-1 h-8 w-8"
+                                    title="Delete all tasks"
                                 >
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>
 
                             <CollapsibleContent>
-                                <ScrollArea className="h-48 rounded-md border">
+                                <ScrollArea className="h-48 rounded-md border bg-background shadow-sm">
                                     <div className="p-2 space-y-1">
                                         {tasks.map((task) => (
                                             <div
                                                 key={task.id}
-                                                className="flex items-center justify-between p-2 hover:bg-accent rounded-sm"
+                                                className="flex items-center justify-between p-2.5 hover:bg-muted/30 rounded-md group transition-colors cursor-pointer"
                                             >
                                                 <span
-                                                    className="cursor-pointer flex-1"
+                                                    className="flex-1 text-primary/90 truncate hover:text-primary transition-colors"
                                                     onClick={() =>
                                                         handleTaskClick(
                                                             task.text
@@ -499,12 +522,13 @@ export default function BreakScheduler() {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="h-6 w-6 text-destructive hover:text-destructive"
+                                                    className="h-7 w-7 p-1.5 text-red-600 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
                                                     onClick={() =>
                                                         handleDeleteTask(
                                                             task.id
                                                         )
                                                     }
+                                                    title="Delete task"
                                                 >
                                                     <X className="h-3.5 w-3.5" />
                                                 </Button>
